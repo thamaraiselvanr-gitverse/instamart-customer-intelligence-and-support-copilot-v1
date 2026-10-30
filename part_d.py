@@ -328,16 +328,48 @@ def calculate_refund(order_amount, delivery_minutes):
         return {"refund_inr": 0}
 
 def issue_refund(order_id, refund_inr):
-    """Issue a refund and log it."""
+    """Issue a mock refund, preventing duplicate refunds for the same order."""
     refund_inr = float(refund_inr)
+    ledger_path = "outputs/refund_ledger.jsonl"
+
+    # Create the output directory if it does not exist.
+    os.makedirs("outputs", exist_ok=True)
+
+    # Check whether this order already has a recorded refund.
+    if os.path.exists(ledger_path):
+        with open(ledger_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    # Do not silently ignore malformed ledger records.
+                    raise ValueError(
+                        f"Invalid JSON in refund ledger: {ledger_path}"
+                    )
+
+                if (
+                    entry.get("tool") == "issue_refund"
+                    and entry.get("order_id") == order_id
+                ):
+                    # Return the existing refund instead of recording another.
+                    return {"refund_inr": float(entry["refund_inr"])}
+
+    # No previous refund found, so record the mock refund.
     entry = {
         "timestamp": datetime.now().isoformat(),
         "tool": "issue_refund",
         "order_id": order_id,
-        "refund_inr": refund_inr
+        "refund_inr": refund_inr,
     }
-    with open("outputs/refund_ledger.jsonl", "a", encoding="utf-8") as f:
+
+    with open(ledger_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry) + "\n")
+
     return {"refund_inr": refund_inr}
 
 def escalate_to_human(order_id, refund_inr):
