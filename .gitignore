@@ -1,5 +1,33 @@
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
+
+# Python virtual environments
+.venv/
 venv/
+
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+
+# OS and editor files
 .DS_Store
+Thumbs.db
+.vscode/
+
+# Generated execution outputs
+outputs/
+
+# Runtime agent state
+state/
+
+# Local backups
+instamart-debug-backup-*/
+
+# Local test reports
+Documents/
+
+# Dashboard backup files
+live_test_dashboard*.bak
+live_test_dashboard.pre-repair.py
